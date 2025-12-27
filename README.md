@@ -61,7 +61,7 @@ Create a `.env` file in the repo root:
 
 ```bash
 cat > .env <<'ENV'
-DATABASE_URL=postgresql+psycopg2://task_user:strongpassword@db:5432/tasks_db
+DATABASE_URL=postgresql+psycopg2://task_user:strongpassword@fiotrix_db:5432/tasks_db
 ENV
 ```
 

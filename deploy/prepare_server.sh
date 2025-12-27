@@ -48,7 +48,7 @@ fi
 
 cd "$APP_DIR"
 if [ -z "$DATABASE_URL" ]; then
-  DATABASE_URL="postgresql+psycopg2://${PG_USER}:${PG_PASSWORD}@localhost:5432/${PG_DB}"
+  DATABASE_URL="postgresql+psycopg2://${PG_USER}:${PG_PASSWORD}@fiotrix_db:5432/${PG_DB}"
 fi
 
 cat > .env <<ENV

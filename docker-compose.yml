@@ -1,12 +1,14 @@
 services:
   app:
     build: .
+    restart: unless-stopped
     ports:
       - "8000:8000"
     env_file:
       - .env
     depends_on:
-      - db
+      fiotrix_db:
+        condition: service_healthy
     networks:
       - default
       - traefik
@@ -14,21 +16,29 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=east-guilan_default"
       - "traefik.http.middlewares.fiotrix-https.redirectscheme.scheme=https"
-      - "traefik.http.routers.fiotrix-http.rule=Host(`fiorix.east-guilan-ce.ir`)"
+      - "traefik.http.routers.fiotrix-http.rule=Host(`fiotrix.east-guilan-ce.ir`)"
       - "traefik.http.routers.fiotrix-http.entrypoints=web"
       - "traefik.http.routers.fiotrix-http.middlewares=fiotrix-https"
-      - "traefik.http.routers.fiotrix.rule=Host(`fiorix.east-guilan-ce.ir`)"
+      - "traefik.http.routers.fiotrix.rule=Host(`fiotrix.east-guilan-ce.ir`)"
       - "traefik.http.routers.fiotrix.entrypoints=websecure"
       - "traefik.http.routers.fiotrix.tls=true"
+      - "traefik.http.routers.fiotrix.entrypoints=websecure"
+      - "traefik.http.routers.fiotrix.tls.certresolver=le"
       - "traefik.http.services.fiotrix.loadbalancer.server.port=8000"
-  db:
+  fiotrix_db:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: task_user
       POSTGRES_PASSWORD: strongpassword
       POSTGRES_DB: tasks_db
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U task_user -d tasks_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
   pgdata:
