@@ -7,6 +7,20 @@ services:
       - .env
     depends_on:
       - db
+    networks:
+      - default
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=east-guilan_default"
+      - "traefik.http.middlewares.fiotrix-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.fiotrix-http.rule=Host(`fiorix.east-guilan-ce.ir`)"
+      - "traefik.http.routers.fiotrix-http.entrypoints=web"
+      - "traefik.http.routers.fiotrix-http.middlewares=fiotrix-https"
+      - "traefik.http.routers.fiotrix.rule=Host(`fiorix.east-guilan-ce.ir`)"
+      - "traefik.http.routers.fiotrix.entrypoints=websecure"
+      - "traefik.http.routers.fiotrix.tls=true"
+      - "traefik.http.services.fiotrix.loadbalancer.server.port=8000"
   db:
     image: postgres:16
     environment:
@@ -18,3 +32,8 @@ services:
 
 volumes:
   pgdata:
+
+networks:
+  traefik:
+    external: true
+    name: east-guilan_default
