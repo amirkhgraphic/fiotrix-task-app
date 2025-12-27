@@ -1,0 +1,30 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            REPO_URL="https://github.com/${{ github.repository }}.git"
+            if [ ! -d "${{ secrets.APP_DIR }}/.git" ]; then
+              git clone "$REPO_URL" "${{ secrets.APP_DIR }}"
+            fi
+            cd "${{ secrets.APP_DIR }}"
+            git pull --ff-only origin main
+            if [ ! -f ".venv/bin/pip" ]; then
+              python3 -m venv .venv
+            fi
+            .venv/bin/pip install -r requirements.txt
+            sudo systemctl restart "${{ secrets.SERVICE_NAME }}"

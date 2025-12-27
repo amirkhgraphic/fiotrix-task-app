@@ -1,0 +1,16 @@
+[Unit]
+Description=Tasks API
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/tasks-api
+EnvironmentFile=/etc/tasks-api/tasks-api.env
+Environment="DATABASE_URL=postgresql+psycopg2://user:pass@localhost:5432/tasks_db"
+ExecStart=/opt/tasks-api/.venv/bin/gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 app.main:app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
