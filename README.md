@@ -37,50 +37,38 @@ Swagger docs are available at `http://localhost:8000/docs`.
 - `PUT /tasks/{task_id}` update a task
 - `DELETE /tasks/{task_id}` delete a task
 
-## Production (Linux)
+## Production (Docker)
 
 ### 1) Prepare the server
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y python3 python3-venv python3-pip git
+sudo apt-get install -y docker.io docker-compose-plugin git
+sudo systemctl enable docker
+sudo systemctl start docker
 ```
 
-### 2) Clone and install
+### 2) Clone the repo
 
 ```bash
 git clone https://github.com/<owner>/<repo>.git /opt/tasks-api
 cd /opt/tasks-api
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
 ```
 
 ### 3) Configure environment
 
-Create an environment file or set the env var directly for systemd:
+Create a `.env` file in the repo root:
 
 ```bash
-sudo mkdir -p /etc/tasks-api
-sudo tee /etc/tasks-api/tasks-api.env > /dev/null <<'ENV'
-DATABASE_URL=postgresql+psycopg2://user:pass@localhost:5432/tasks_db
+cat > .env <<'ENV'
+DATABASE_URL=postgresql+psycopg2://task_user:strongpassword@db:5432/tasks_db
 ENV
 ```
 
-### 4) Systemd service
-
-Copy the template and adjust `User`, `Group`, and paths if needed:
+### 4) Start containers
 
 ```bash
-sudo cp deploy/tasks-api.service /etc/systemd/system/tasks-api.service
-sudo systemctl daemon-reload
-sudo systemctl enable tasks-api
-sudo systemctl start tasks-api
-```
-
-To use the env file, update the service with:
-
-```ini
-EnvironmentFile=/etc/tasks-api/tasks-api.env
+docker compose up -d --build
 ```
 
 ### 5) Verify
@@ -92,10 +80,8 @@ curl http://localhost:8000/tasks/
 ## GitHub Actions (CI/CD)
 
 - CI workflow checks dependency integrity and Python syntax on every push/PR.
-- CD workflow uses SSH to pull the latest code on your server and restart the systemd service. Set secrets:
-  - `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `APP_DIR`, `SERVICE_NAME`
-
-The CD workflow clones the repo if it does not exist; otherwise it runs `git pull`.
+- CD workflow uses SSH to pull the latest code on your server and run `docker compose up -d --build`. Set secrets:
+  - `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `APP_DIR`
 
 ## Server Update Script
 
@@ -104,6 +90,5 @@ Use the helper script on the server to pull and restart:
 ```bash
 export REPO_URL=https://github.com/<owner>/<repo>.git
 export APP_DIR=/opt/tasks-api
-export SERVICE_NAME=tasks-api
 bash deploy/update_server.sh
 ```
